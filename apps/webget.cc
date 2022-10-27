@@ -8,7 +8,23 @@ using namespace std;
 
 void get_URL(const string &host, const string &path) {
     // Your code here.
+    TCPSocket cliSock; // 不需要为服务器创建hostSock，那是服务器那边要做的事情
+    cliSock.connect(Address(host,"http")); 
 
+    // Send a request to server
+    cliSock.write("GET "+ path +" HTTP/1.1\r\n");
+    cliSock.write("Host: "+ host +"\r\n");
+    cliSock.write("Connection: close\r\n\r\n"); // 这一行最后要多加一个 
+    
+    //cli received response from the server
+    cliSock.shutdown(SHUT_WR); //关闭写功能，留下读功能
+    
+    while(!cliSock.eof()){
+        auto read = cliSock.read();
+        cout << read;
+    }
+    
+    cliSock.close();
     // You will need to connect to the "http" service on
     // the computer whose name is in the "host" string,
     // then request the URL path given in the "path" string.
@@ -17,8 +33,8 @@ void get_URL(const string &host, const string &path) {
     // (not just one call to read() -- everything) until you reach
     // the "eof" (end of file).
 
-    cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
-    cerr << "Warning: get_URL() has not been implemented yet.\n";
+    //cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
+    //cerr << "Warning: get_URL() has not been implemented yet.\n";
 }
 
 int main(int argc, char *argv[]) {
