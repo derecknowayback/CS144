@@ -14,8 +14,10 @@ using namespace std;
 //! \param n The input absolute 64-bit sequence number
 //! \param isn The initial sequence number
 WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
-    DUMMY_CODE(n, isn);
-    return WrappingInt32{0};
+    uint32_t _isn = isn.raw_value();
+    uint64_t mod = 1ull << 32;
+    uint32_t raw_value = (n + _isn) % mod;    
+    return WrappingInt32(raw_value);
 }
 
 //! Transform a WrappingInt32 into an "absolute" 64-bit sequence number (zero-indexed)
@@ -29,6 +31,13 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 //! and the other stream runs from the remote TCPSender to the local TCPReceiver and
 //! has a different ISN.
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
-    DUMMY_CODE(n, isn, checkpoint);
-    return {};
+    // here seems buggy ! INT32_MAX or INT32_MAX + 1
+    uint64_t k = checkpoint / (1ull << 32); // 向下取整
+    uint64_t var1 =  (1ull << 32) * k , var2 = (1ull << 32) * (k + 1) , var3 = k == 0 ? 0 : (1ull << 32) *( k - 1);
+    uint64_t _isn = isn.raw_value(), _n = n.raw_value();
+    var1 += (_n + (1ull << 32) - _isn) % (1ull << 32);
+    var2 += (_n + (1ull << 32) - _isn) % (1ull << 32);
+    var3 += (_n + (1ull << 32) - _isn) % (1ull << 32);
+    uint64_t  res = abs(static_cast<long long >(var1 - checkpoint)) > abs(static_cast<long long >(var2 - checkpoint))  ? var2 : var1;
+    return abs(static_cast<long long >(res - checkpoint)) > abs(static_cast<long long >(var3 - checkpoint)) ? var3 : res;
 }

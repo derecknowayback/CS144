@@ -5,15 +5,27 @@
 
 #include <cstdint>
 #include <string>
+#include <queue>
+#include <utility>
+#include <map>
+
+
+typedef std::pair<size_t,std::string> pi;
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
 class StreamReassembler {
   private:
     // Your code here -- add private members as necessary.
-
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    size_t _unassembled_bytes; //!< 未重组的bytes 
+    size_t _last_bytes; //!< 最后一个接收的字符的index
+    size_t _expected_bytes; //!< 期待接收的下一个字符
+    bool _eof;
+    std::map <size_t,std::string> _buffer; // buffer数组
+
+    void deduplication();
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
@@ -46,6 +58,12 @@ class StreamReassembler {
     //! \brief Is the internal state empty (other than the output stream)?
     //! \returns `true` if no substrings are waiting to be assembled
     bool empty() const;
+
+    size_t get_expected_index() const{return _expected_bytes;}
+
+    size_t get_unacceptable_index() const{return _output.bytes_read() + _capacity;}
+
+    size_t get_last_bytes() const{return _last_bytes;}
 };
 
 #endif  // SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
