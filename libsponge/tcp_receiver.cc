@@ -44,7 +44,7 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
         if(seqno.raw_value() == _syn && syn == false) return;
 
 
-        // todo 把数据放到 重组器里， 要不要写 syn 和 fin ???
+        // 把数据放到 重组器里， 不要写 syn 和 fin
         _reassembler.push_substring(seg.payload().copy(),index,fin);
     }
 }

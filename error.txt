@@ -1,0 +1,16 @@
+17/33 Test #17: t_send_extra .....................***Failed    0.02 sec
+Test Failure on expectation:
+	Expectation: segment sent with (A=0,R=0,S=0,F=0,seqno=298415886,payload_size=1,"a",...)
+
+Failure message:
+	The Sender should have produced a segment that existed, but it did not
+
+List of steps that executed successfully:
+	Initialized with (retx-timeout=5441) and called fill_window()
+	Expectation: segment sent with (A=0,R=0,S=1,F=0,seqno=298415885,payload_size=0,...)
+	Action:      write bytes: "abc"
+	Expectation: no (more) segments
+	Action:      ack 298415886 winsize 0
+	Expectation: in state `stream ongoing`
+
+The test "When filling window, treat a '0' window size as equal to '1' but don't back off RTO" failed
