@@ -31,9 +31,9 @@ optional<TCPSegment> TCPOverIPv4Adapter::unwrap_tcp_in_ip(const InternetDatagram
     }
 
     // is the IPv4 datagram from our peer?
-    if (not listening() and (ip_dgram.header().src != config().destination.ipv4_numeric())) {
-        return {};
-    }
+    // if (not listening() and (ip_dgram.header().src != config().destination.ipv4_numeric())) {
+    //     return {};
+    // }
 
     // does the IPv4 datagram claim that its payload is a TCP segment?
     if (ip_dgram.header().proto != IPv4Header::PROTO_TCP) {

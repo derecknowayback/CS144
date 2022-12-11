@@ -49,6 +49,7 @@ static void ack_rst_syn_sent_test(const TCPConfig &cfg,
 }
 
 int main() {
+
     try {
         TCPConfig cfg{};
         const WrappingInt32 base_seq(1 << 31);

@@ -1,4 +1,4 @@
-#include "socket.hh"
+#include "tcp_sponge_socket.hh"
 #include "util.hh"
 
 #include <cstdlib>
@@ -8,7 +8,7 @@ using namespace std;
 
 void get_URL(const string &host, const string &path) {
     // Your code here.
-    TCPSocket cliSock; // 不需要为服务器创建hostSock，那是服务器那边要做的事情
+    CS144TCPSocket cliSock; // 不需要为服务器创建hostSock，那是服务器那边要做的事情
     cliSock.connect(Address(host,"http")); 
 
     // Send a request to server
@@ -25,6 +25,7 @@ void get_URL(const string &host, const string &path) {
     }
     
     cliSock.close();
+    cliSock.wait_until_closed();
     // You will need to connect to the "http" service on
     // the computer whose name is in the "host" string,
     // then request the URL path given in the "path" string.

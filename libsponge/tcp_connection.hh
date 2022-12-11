@@ -14,16 +14,35 @@ class TCPConnection {
     TCPSender _sender{_cfg.send_capacity, _cfg.rt_timeout, _cfg.fixed_isn};
 
     //! outbound queue of segments that the TCPConnection wants sent
-    std::queue<TCPSegment> _segments_out{};
+    std::queue<TCPSegment> _segments_out{}; // ??? 这个应该是和sender同步的 
 
     //! Should the TCPConnection stay active (and keep ACKing)
     //! for 10 * _cfg.rt_timeout milliseconds after both streams have ended,
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
+    //! \brief 这个用来对付对应的方法
+    // size_t _remaining_outbound_capacity{0};
+
+    //! \brief 这个用来对付 time_since_last_segment_received
+    // 在收到 segment的时候会把它置零
+    size_t _time_since_last_segment_received{0};
+    
+    //! \brief
+    bool _has_rcvsd_RST{false};
+
+    //! \brief
+    size_t _linger_time;
+
+
+    
+
   public:
     //! \name "Input" interface for the writer
-    //!@{
+    //!@{    
+    void transport();
+    
+    void set_rst(bool need_rst);
 
     //! \brief Initiate a connection by sending a SYN segment
     void connect();
@@ -39,6 +58,7 @@ class TCPConnection {
     void end_input_stream();
     //!@}
 
+
     //! \name "Output" interface for the reader
     //!@{
 
@@ -46,8 +66,9 @@ class TCPConnection {
     ByteStream &inbound_stream() { return _receiver.stream_out(); }
     //!@}
 
-    //! \name Accessors used for testing
 
+
+    //! \name Accessors used for testing
     //!@{
     //! \brief number of bytes sent and not yet acknowledged, counting SYN/FIN each as one byte
     size_t bytes_in_flight() const;
@@ -59,9 +80,10 @@ class TCPConnection {
     TCPState state() const { return {_sender, _receiver, active(), _linger_after_streams_finish}; };
     //!@}
 
+
+
     //! \name Methods for the owner or operating system to call
     //!@{
-
     //! Called when a new segment has been received from the network
     void segment_received(const TCPSegment &seg);
 
@@ -80,8 +102,11 @@ class TCPConnection {
     bool active() const;
     //!@}
 
+
+
+
     //! Construct a new connection from a configuration
-    explicit TCPConnection(const TCPConfig &cfg) : _cfg{cfg} {}
+    explicit TCPConnection(const TCPConfig &cfg) : _cfg{cfg},_linger_time{cfg.rt_timeout * static_cast<size_t>(10)} {}
 
     //! \name construction and destruction
     //! moving is allowed; copying is disallowed; default construction not possible

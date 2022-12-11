@@ -1,0 +1,194 @@
+cerr << endl << "Sender Before segment received  " << TCPState::state_summary(_sender) << endl;
+    cerr << "Receiver Before segment received " << TCPState::state_summary(_receiver) << endl;
+    if (!active()) return;
+
+     // 别忘了 重置时间
+    _time_since_last_segment_received = 0;
+
+    TCPHeader header = seg.header();
+
+    bool is_listen = _sender.next_seqno_absolute() == 0 && !_receiver.ackno().has_value();
+
+    //! in LISTEN, send ACK ->  any ACK should result in a RST 
+    if (header.rst || (is_listen && header.ack)) {
+        //! \brief all RSTs should be ignored in LISTEN 这是 严格&relaxed 测试的条件
+        //! \bug any ACK should result in a RST  这是 严格测试 的条件
+        // 但是这里却没有，很奇怪（应该是只测试relaxed）
+        if(!is_listen){
+            _linger_after_streams_finish = false;
+            _has_rcvsd_RST = true;
+            //! \bug 怎么设置inputstream的error啊,利用ByteStream的api
+            _receiver.stream_out().set_error();
+            _sender.stream_in().set_error();
+            // good ACK with RST should result in a RESET but no RST segment sent
+            if(!(_sender.next_seqno() == header.ackno))
+                send_RST();
+        } 
+    }else if(_receiver.ackno().has_value() and (seg.length_in_sequence_space() == 0) and seg.header().seqno == _receiver.ackno().value() - 1){
+        if(header.ack){
+            _sender.ack_received(header.ackno, header.win);
+            //! 如果这里没有ack,那么我们就不会告知下层sender windows的大小
+        }
+        _sender.send_empty_segment();
+        transport();
+    }else{
+        // 给receiver
+        _receiver.segment_received(seg);
+
+        // 如果该报文段有 ack
+        if(header.ack){
+            _sender.ack_received(header.ackno, header.win);
+            //! 如果这里没有ack,那么我们就不会告知下层sender windows的大小
+        }
+        // 因为更新了窗口，所以尽力fill_window()
+        _sender.fill_window();
+        transport(); 
+
+        // 如果这个segment有占据 "序列号"，那么就要 “确保”发送一个segment，返回ack和window
+        if(seg.length_in_sequence_space() != 0){
+            uint16_t win = _receiver.window_size();
+            optional<WrappingInt32> ack = _receiver.ackno();
+            //! \bug 这里可能会出错，到底是确保第一个是最新的ack和win，
+            //! 还是直接new 一个segment压到队列中呢
+            if(ack.has_value()){
+                // 如果输出队列为空，就压入一个segment    
+                if (_sender.segment_size() == 0 && _segments_out.empty()) {
+                    _sender.send_empty_segment();
+                }
+                transport();
+                // 如果输出队列不为空，那么直接修改第一个就好了
+                _segments_out.front().header().ack = true;
+                _segments_out.front().header().ackno = ack.value();
+                _segments_out.front().header().win = win;
+            }
+        }
+        
+        //  If the inbound stream ends before the TCPConnection has reached EOF on its outbound stream, 
+        //  _linger_after_streams_finish needs to be set to false.
+        if(_receiver.stream_out().input_ended() && !_sender.stream_in().eof())
+            _linger_after_streams_finish = false;
+    }
+    cerr << "Sender After segment received  " << TCPState::state_summary(_sender) << endl;
+    cerr << "Receiver After segment received  " << TCPState::state_summary(_receiver) << endl << endl;
+
+
+
+
+
+
+
+
+
+    void TCPConnection::segment_received(const TCPSegment &seg) {
+    // 重置时间
+    _time_since_last_segment_received = 0;
+
+    
+    
+    // listen  receiver->listen sender->closed
+    if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::LISTEN
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::CLOSED){
+
+    }
+    // syn_received receiver->对面syn到了  sender->自己syn发了
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::SYN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::SYN_SENT){
+
+    }
+    // syn_sent
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::LISTEN
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::SYN_SENT){
+
+    }
+    // established
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::SYN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::SYN_ACKED){
+
+    }
+    // close_wait
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::FIN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::SYN_ACKED
+        and !_linger_after_streams_finish){
+
+    }
+    // last_ack
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::FIN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::FIN_SENT
+        and !_linger_after_streams_finish){
+
+    }
+    // closing
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::FIN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::FIN_SENT){
+
+    }
+    // fin_wait1
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::SYN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::FIN_SENT){
+
+    }
+    // fin_wait2
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::SYN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::FIN_ACKED){
+
+    }
+    // time_wait
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::FIN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::FIN_ACKED){
+
+    }
+    // reset negative close
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::ERROR
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::ERROR
+        and !_linger_after_streams_finish
+        and !active()){
+
+    }
+    // closed 2  passive cloes
+    else if(TCPState::state_summary(_receiver) == TCPReceiverStateSummary::FIN_RECV
+        and TCPState::state_summary(_sender) == TCPSenderStateSummary::FIN_ACKED
+        and !_linger_after_streams_finish
+        and !active()){
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void TCPConnection::send_RST(bool need_rst){
+    // 发送RST
+    _sender.send_empty_segment();
+    uint16_t win = _receiver.window_size();
+    optional<WrappingInt32> ack = _receiver.ackno();
+    transport();
+    _segments_out.back().header().rst = true;
+    if(ack.has_value()){
+        _segments_out.back().header().ack = true;
+        _segments_out.back().header().ackno = ack.value();
+        // 看上去不能把win单独拉出来,amazing
+        _segments_out.back().header().win = win;
+    }
+    // abord 这个连接 Unclean的方式
+    _has_rcvsd_RST = true;
+    // _linger_after_streams_finish = false;
+    _receiver.stream_out().set_error();
+    _sender.stream_in().set_error();
+}

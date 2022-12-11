@@ -45,6 +45,7 @@ add_test(NAME router_test    COMMAND network_simulator)
 
 add_test(NAME t_tcp_parser           COMMAND tcp_parser "${PROJECT_SOURCE_DIR}/tests/ipv4_parser.data")
 add_test(NAME t_ipv4_parser          COMMAND ipv4_parser "${PROJECT_SOURCE_DIR}/tests/ipv4_parser.data")
+# lab4
 add_test(NAME t_active_close         COMMAND fsm_active_close)
 add_test(NAME t_passive_close        COMMAND fsm_passive_close)
 add_test(NAME ec_ack_rst             COMMAND fsm_ack_rst)
@@ -192,7 +193,7 @@ add_test(NAME t_isnR_128K_8K_lL      COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -is
 add_test(NAME t_isnD_128K_8K_l       COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -isDnd 128K -w 8K -l ${LOSS_RATE})
 add_test(NAME t_isnD_128K_8K_L       COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -isDnd 128K -w 8K -L ${LOSS_RATE})
 add_test(NAME t_isnD_128K_8K_lL      COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -isDnd 128K -w 8K -l ${LOSS_RATE} -L ${LOSS_RATE})
-
+# 以上被我注释了
 #add_test(NAME t_icoS_128K_8K_l   COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -icSod 128K -w 8K -l ${LOSS_RATE})
 #add_test(NAME t_icoS_128K_8K_L   COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -icSod 128K -w 8K -L ${LOSS_RATE})
 #add_test(NAME t_icoS_128K_8K_lL  COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -icSod 128K -w 8K -l ${LOSS_RATE} -L ${LOSS_RATE})

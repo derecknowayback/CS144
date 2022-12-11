@@ -1,5 +1,7 @@
 #include "tcp_receiver.hh"
 
+
+
 // Dummy implementation of a TCP receiver
 
 // For Lab 2, please replace with a real implementation that passes the
@@ -18,6 +20,8 @@ void TCPReceiver::segment_received(const TCPSegment &seg) {
     bool syn = header.syn;
     bool fin = header.fin;
 
+    
+    
     if(syn) {
         _has_received_syn = true;
         _syn = seqno.raw_value();
@@ -70,5 +74,5 @@ size_t TCPReceiver::window_size() const {
      * and the “first unacceptable” index.
      * 没有看懂啊，这样子是不需要计算 乱序缓存的字符串 吗？ 感觉不合理，是不是要返回 重组器的 useful?
      */
-    return first_unacceptable - first_unassembled;
+    return first_unacceptable - first_unassembled > numeric_limits<uint16_t>::max() ? numeric_limits<uint16_t>::max() : first_unacceptable - first_unassembled;
 }

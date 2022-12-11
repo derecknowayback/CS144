@@ -29,13 +29,18 @@ class RetryTimer{
     void set_rto(size_t init){rto = init;}
 
     //! 两倍延长RTO
-    void double_rto(){rto = rto * 2; }
+    void double_rto(){
+      if(rto > UINT64_MAX / 2) rto = UINT64_MAX;
+      else rto = rto * 2; 
+    }
 
     //! 重置
     void reset(){time_to_expire = rto;}
 
     //! 减少时间，这里时间过大了不知道会发生什么
     void time_pass(const size_t ms_since_last_tick){
+      // 如果钟还没有开启，就不开
+      if(_is_stop) return;
       if(ms_since_last_tick > time_to_expire){
         time_to_expire = 0;
         return;
@@ -51,7 +56,6 @@ class RetryTimer{
     // stop ??? 什么叫stop
     void stop(){
       _is_stop = true;
-      time_to_expire = 0;
     }
 
     bool is_stop(){
@@ -111,7 +115,7 @@ class TCPSender {
     // 计算未被ack的sequence数量
     uint64_t _bytes_in_flight{0};
 
-    //
+    // 要不要增加rto  (专门应对 window == 0 的情况)
     bool _should_backoff_rto{true};
 
 
@@ -153,6 +157,8 @@ class TCPSender {
 
     //! \brief Number of consecutive retransmissions that have occurred in a row
     unsigned int consecutive_retransmissions() const;
+
+    size_t segment_size(){return _segments_out.size();}
 
     //! \brief TCPSegments that the TCPSender has enqueued for transmission.
     //! \note These must be dequeued and sent by the TCPConnection,

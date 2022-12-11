@@ -1,16 +1,39 @@
-17/33 Test #17: t_send_extra .....................***Failed    0.02 sec
-Test Failure on expectation:
-	Expectation: segment sent with (A=0,R=0,S=0,F=0,seqno=298415886,payload_size=1,"a",...)
+dereck@cs144_vm:/mnt/hgfs/shareFolder/sponge/build$ ctest --output-on-failure -V -R 't_udp_client_send'
+UpdateCTestConfiguration  from :/mnt/hgfs/shareFolder/sponge/build/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/mnt/hgfs/shareFolder/sponge/build/DartConfiguration.tcl
+Test project /mnt/hgfs/shareFolder/sponge/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start 1: t_udp_client_send
 
-Failure message:
-	The Sender should have produced a segment that existed, but it did not
+1: Test command: /mnt/hgfs/shareFolder/sponge/txrx.sh "-ucS"
+1: Test timeout computed to be: 9.99988e+06
 
-List of steps that executed successfully:
-	Initialized with (retx-timeout=5441) and called fill_window()
-	Expectation: segment sent with (A=0,R=0,S=1,F=0,seqno=298415885,payload_size=0,...)
-	Action:      write bytes: "abc"
-	Expectation: no (more) segments
-	Action:      ack 298415886 winsize 0
-	Expectation: in state `stream ongoing`
+1: DEBUG: Listening for incoming connection... DEBUG: Connecting to 169.254.144.1:26337... 
 
-The test "When filling window, treat a '0' window size as equal to '1' but don't back off RTO" failed
+Sender Before segment receivedwaiting for stream to begin (no SYN sent)
+Receiver Before segment receivedwaiting for SYN: ackno is empty
+
+1: Sender After segment received stream started but nothing acknowledged
+1: Receiver After segment received SYN received (ackno exists), and input to stream hasn't ended
+
+1: Sender Before segment received stream started but nothing acknowledged
+1: Receiver Before segment received waiting for SYN: ackno is empty
+
+1: Sender After segment receivedstream ongoing
+1: Receiver After segment receivedSYN received (ackno exists), and input to stream hasn't ended
+
+1: done.
+
+1: Sender Before segment receivedstream started but nothing acknowledged
+1: Receiver Before segment receivedSYN received (ackno exists), and input to stream hasn't ended
+
+1: Sender After segment received stream ongoing
+1: Receiver After segment received SYN received (ackno exists), and input to stream hasn't ended
+ 
+1: new connection from 169.254.144.1:35380.

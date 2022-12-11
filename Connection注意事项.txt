@@ -1,0 +1,85 @@
+收到片段的时候
+
+1.如果RST被设置了，那么输出输入流都设置error 永久关闭
+
+2. 如果RST没有被设置，把segment
+   - 给receiver
+   - 如果有ack，那么告诉sender ackno和window
+   (这也意味着，在后面，我们需要封装segment的时候需要带上 aackno 和 window)
+   - 如果这个segment有占据 "序列号"，那么就要 
+	“确保”发送一个segment，返回ack和window
+
+3. 特殊情况： "keep-alive"段来了
+	如果一个ack是个"非法的"（过时-,超前-这个超前指的是你已经ack过了100，结果来了个ack 9)
+	那么我们就要send_empty_segment
+
+
+发送片段的时候
+1. sender 负责 seqno、SYN、payload、FIN
+2. 在发送之前，需要我们问问receiver有没有ack要发
+
+
+*****************  这是Sender的segment_out() ********************************
+    //! \brief TCPSegments that the TCPSender has enqueued for transmission.
+    //! \note These must be dequeued and sent by the TCPConnection,
+    //! which will need to fill in the fields that are set by the TCPReceiver
+    //! (ackno and window size) before sending.
+    std::queue<TCPSegment> &segments_out() { return _segments_out; }
+*****************************************************************************
+
+
+***************  这是Conncetion的segment_out() *************************************
+    //! \brief TCPSegments that the TCPConnection has enqueued for transmission.
+    //! \note The owner or operating system will dequeue these and
+    //! put each one into the payload of a lower-layer datagram (usually Internet datagrams (IP),
+    //! but could also be user datagrams (UDP) or any other kind).
+    std::queue<TCPSegment> &segments_out() { return _segments_out; }
+*****************************************************************************
+
+
+
+时间过去的时候：
+1. 告诉Sender时间过去了
+2. 如果重传次数超过了最大重传次数，那么就直接废弃这个连接，发送一个reset segment给对方
+（注意：2应该比1先做）
+
+PS：TCPConfig::MAX RETX ATTEMPTS == 8
+
+
+Connection类中，应该是在ack received的时候去发送
+
+
+——————————————————————————————————————————————————————————————————————————
+最难的是怎么决定active
+
+放弃连接的时候
+1. 返回 端口号给OS
+2. 停止对到来的segment给予ack
+3. 将这个连接视为 “历史连接”,调用 active 返回 false
+
+用两种方式来结束连接
+
+一种是 不干净 的：
+条件->   收到/发送 一个RST段
+action-> 将输入and输出流设置为error态，active返回false
+
+一种是 干净 的：
+条件-> 两边的流都是完整接收了的，
+action-> 不设置error (ok，我还是不知道怎么样才算是 “设置了流的error”)
+<有没可能，根本不需要 “显示设置” error>
+
+条件
+1. 输入流重组完成并且结束
+2. 输出流结束并且完整发送
+3. 输出流已经全部被ack了
+4. 本地的connection 可以确定 对面的连接 也可以做到3
+
+
+接收方：
+in LISTEN, send ACK ->  any ACK should result in a RST
+in SYN_SENT, send ACK and maybe RST ->  unacceptable ACKs should elicit a RST
+in LISTEN, send RSTs -> all RSTs should be ignored in LISTEN
+
+发了SYN但是没有被确认，不应该发数据，要先等SYN被确认
+data segments with acceptable ACKs should be ignored
+good ACK with RST should result in a RESET but no RST segment sent

@@ -37,7 +37,7 @@ uint64_t TCPSender::bytes_in_flight() const {
 
 
 void TCPSender::fill_window() {
-
+    
     if(_has_sent_FIN) return;
     // !The test "Immediate writes respect the window" failed
     // 发送的时候要比对窗口
@@ -107,12 +107,15 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     // 如果一个窗口有两个值出现,那就是出现了经典的“窗口过小”错误)
     size_t new_ack = unwrap(ackno,_isn,_next_seqno);
 
-    // "Impossible ackno (beyond next seqno) is ignored"
-    if(new_ack > _next_seqno) return;
+    // "Impossible ackno (beyond next seqno) is ignored" 
+    // (那过早的ack也应该忽视,比如我已经 ack-10 了，你再 ack-3 ，毫无意义，因为根据累计确认，ack-10一定是在ack-3后)
+    if(new_ack > _next_seqno || new_ack < _pre_ack) return;
+
 
     // 更新窗口的大小
     if(window_size == 0){
         _right_max = new_ack;
+        // 窗口为0的时候，右边界不变，但是这时候我们不应该加倍rto
         _should_backoff_rto = false;
     } 
     else{
@@ -156,12 +159,11 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     // 发送需要的数据
     // 判断是重发还是发送新的
     // 这里 "==" 不是很严谨，但是我们还是这么做了
+    // ack_has_changed: 只有 新的待发段落 才会启动timer
     if(!_outstanding.empty() && ack_has_changed){
         // 启动timer
         _timer.start();
-        // if(_outstanding.at(0).header().seqno == _next_seqno) -> 这个判断 感觉不需要了
         // 这里不需要基于ack的快速重传，不用重传，只需要启动timer
-        //  _segments_out.push(_outstanding.at(0).second);
        // 不应该pop,只有ack来了才能pop 
     }
     // 如果不是重发，那么就是发新的，和fill_window逻辑一样，直接调用
@@ -169,7 +171,7 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         _timer.stop();
     }
     // 小心，fill_window并没有重启timer???
-    fill_window();
+    // fill_window();
     // 有一个问题，我们在这里需不需要更新window呢? 我觉得是不用的
 }
 
@@ -192,19 +194,23 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
     //  2.3 重置timer，开始新一轮计时 d
        
     if(_timer.isExpired()){
-        // 重传最老的未确认segment(无条件)
+
+        // 重传最老的未确认segment(无条件): 
+        // If the window size is nonzero: 重传的时候看上去不需要考虑窗口的大小
+        // 为什么上面Push的时候不需要考虑window，push完之后需要考虑
         if(!_outstanding.empty())
             _segments_out.push(_outstanding.at(0).second);
 
-         // If the window size is nonzero ???
-         // 为什么上面Push的时候不需要考虑window，push完之后需要考虑
+
         // 重传次数 ++
         _consecutive_retransmissions++;
+
         // 翻倍 RTO，并启动
-        //
+        // 要判断是不是需要 double_rto
         if(_should_backoff_rto)
             _timer.double_rto();
-        _timer.start();
+        // 这里重新使用 reset,而不是 start
+        _timer.reset();
     }
  }
 
@@ -222,6 +228,7 @@ void TCPSender::send_empty_segment() {
     TCPSegment segment;
     // uint64_t right_no = _next_seqno ; 
     // 这里要发送的应该是 _next_seqno，但是_next_seqno是后面的还是前面的???
-    segment.header().seqno = wrap(_next_seqno,_isn);
+    // 从lab4的文档知道，这里要发送的不是
+    segment.header().seqno = next_seqno();
     _segments_out.push(segment);
 }
