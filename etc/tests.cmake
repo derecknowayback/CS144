@@ -193,7 +193,7 @@ add_test(NAME t_isnR_128K_8K_lL      COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -is
 add_test(NAME t_isnD_128K_8K_l       COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -isDnd 128K -w 8K -l ${LOSS_RATE})
 add_test(NAME t_isnD_128K_8K_L       COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -isDnd 128K -w 8K -L ${LOSS_RATE})
 add_test(NAME t_isnD_128K_8K_lL      COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -isDnd 128K -w 8K -l ${LOSS_RATE} -L ${LOSS_RATE})
-# 以上被我注释了
+# # 以上被我注释了
 #add_test(NAME t_icoS_128K_8K_l   COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -icSod 128K -w 8K -l ${LOSS_RATE})
 #add_test(NAME t_icoS_128K_8K_L   COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -icSod 128K -w 8K -L ${LOSS_RATE})
 #add_test(NAME t_icoS_128K_8K_lL  COMMAND "${PROJECT_SOURCE_DIR}/txrx.sh" -icSod 128K -w 8K -l ${LOSS_RATE} -L ${LOSS_RATE})

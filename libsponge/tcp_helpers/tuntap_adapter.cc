@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-#include "tuntap_adapter.hh"
-
-using namespace std;
-
-//! Specialize LossyFdAdapter to TCPOverIPv4OverTunFdAdapter
-template class LossyFdAdapter<TCPOverIPv4OverTunFdAdapter>;
-=======
 #include "tuntap_adapter.hh"
 
 using namespace std;
@@ -65,4 +57,3 @@ void TCPOverIPv4OverEthernetAdapter::send_pending() {
 
 //! Specialize LossyFdAdapter to TCPOverIPv4OverTunFdAdapter
 template class LossyFdAdapter<TCPOverIPv4OverTunFdAdapter>;
->>>>>>> origin/lab5-startercode

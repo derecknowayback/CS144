@@ -1,6 +1,5 @@
 #include "tcp_connection.hh"
 
-#include <cassert>
 #include <iostream>
 
 // Dummy implementation of a TCP connection
@@ -54,10 +53,6 @@ void TCPConnection::connect() {
 }
 
 void TCPConnection::segment_received(const TCPSegment &seg) {
-    // cerr << endl << "segment_received " << endl;
-    // cerr << "Sender Before: " << TCPState::state_summary(_sender) << endl;
-    // cerr << "Receiver Before: " << TCPState::state_summary(_receiver) << endl << endl;
-
 if (!active()) return;
 
      // 别忘了 重置时间
@@ -126,12 +121,9 @@ if (!active()) return;
         if(_receiver.stream_out().input_ended() && !_sender.stream_in().eof())
             _linger_after_streams_finish = false;
     }
-    // cerr << "Sender After: " << TCPState::state_summary(_sender) << endl;
-    // cerr << "Receiver After: " << TCPState::state_summary(_receiver) << endl << endl;
 }
 
 void TCPConnection::set_rst(bool need_rst){
-    // cerr << endl << "set_rst " << endl;
     _has_rcvsd_RST = true;
     // 清空可能要发送的数据包
     while(!_sender.segments_out().empty()) _sender.segments_out().pop();
@@ -149,8 +141,6 @@ void TCPConnection::set_rst(bool need_rst){
 
 //! \param[in] ms_since_last_tick number of milliseconds since the last call to this method
 void TCPConnection::tick(const size_t ms_since_last_tick) {
-    // cerr << endl << "tick called " << endl;
-    // cerr << "time passed: " << ms_since_last_tick << endl;
     // 增加时间
     _time_since_last_segment_received += ms_since_last_tick;
     _sender.tick(ms_since_last_tick);
@@ -169,8 +159,6 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
 }
 
 size_t TCPConnection::write(const string &data) {
-    // cerr << endl << "write called " << endl;
-    // cerr << "data comes: " << data << endl; 
     size_t res = _sender.stream_in().write(data);
     _sender.fill_window();
     transport();
@@ -178,7 +166,6 @@ size_t TCPConnection::write(const string &data) {
 }
 
 void TCPConnection::end_input_stream() {
-    // cerr << endl << "end_input_stream " << endl;
     _sender.stream_in().end_input();
     // 结束流完之后要立马通知sender发
     _sender.fill_window();
@@ -196,7 +183,6 @@ bool TCPConnection::active() const {
 }
 
 TCPConnection::~TCPConnection() {
-    // cerr << endl << "disconstruct called " << endl;
     try {
         if (active()) {
             cerr << "Warning: Unclean shutdown of TCPConnection\n";

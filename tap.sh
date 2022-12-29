@@ -110,8 +110,4 @@ check_sudo "$@"
 . "$(dirname "$0")"/etc/tunconfig
 
 # start, stop, or restart all intfs
-<<<<<<< HEAD
 eval "${MODE}_all" "$@"
-=======
-eval "${MODE}_all" "$@"
->>>>>>> origin/lab5-startercode

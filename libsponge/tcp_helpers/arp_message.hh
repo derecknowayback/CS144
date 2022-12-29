@@ -12,7 +12,7 @@ struct ARPMessage {
     static constexpr uint16_t TYPE_ETHERNET = 1;  //!< ARP type for Ethernet/Wi-Fi as link-layer protocol
     static constexpr uint16_t OPCODE_REQUEST = 1;
     static constexpr uint16_t OPCODE_REPLY = 2;
-
+    
     //! \name ARPheader fields
     //!@{
     uint16_t hardware_type = TYPE_ETHERNET;              //!< Type of the link-layer protocol (generally Ethernet/Wi-Fi)
@@ -39,6 +39,7 @@ struct ARPMessage {
 
     //! Is this type of ARP message supported by the parser?
     bool supported() const;
+
 };
 
 //! \struct ARPMessage

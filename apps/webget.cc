@@ -8,7 +8,7 @@ using namespace std;
 
 void get_URL(const string &host, const string &path) {
     // Your code here.
-    CS144TCPSocket cliSock; // 不需要为服务器创建hostSock，那是服务器那边要做的事情
+    FullStackSocket cliSock; // 不需要为服务器创建hostSock，那是服务器那边要做的事情
     cliSock.connect(Address(host,"http")); 
 
     // Send a request to server
